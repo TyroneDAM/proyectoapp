@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.BookcloudApp" parent="Theme.AppCompat.Light.DarkActionBar"/>
+    <style name="Theme.BookcloudApp.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/zorro_naranja</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.BookcloudApp</item>
+    </style>
+
+</resources>

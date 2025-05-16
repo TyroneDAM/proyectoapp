@@ -114,11 +114,13 @@ object ApiService {
                         for (i in 0 until jsonArray.length()) {
                             val obj = jsonArray.getJSONObject(i)
                             val libro = mapOf(
+                                "id" to obj.optString("id", ""), // ← Añadimos el ID aquí
                                 "titulo" to obj.optString("titulo", ""),
                                 "autor" to obj.optString("autor", ""),
                                 "portada" to obj.optString("portada", ""),
                                 "descripcion" to obj.optString("descripcion", "")
                             )
+
                             libros.add(libro)
                         }
                     } catch (e: Exception) {

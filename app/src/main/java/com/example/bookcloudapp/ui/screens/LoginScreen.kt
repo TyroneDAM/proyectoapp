@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.bookcloudapp.network.ApiService
-
+import androidx. compose. ui. Alignment
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
@@ -32,10 +32,12 @@ fun LoginScreen(
     ) { padding ->
         Column(
             modifier = Modifier
-                .padding(padding)
-                .padding(horizontal = 24.dp)
-                .fillMaxWidth()
-        ) {
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        )
+        {
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },

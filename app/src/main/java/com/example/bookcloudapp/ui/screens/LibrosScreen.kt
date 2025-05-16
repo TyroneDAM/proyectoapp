@@ -22,6 +22,11 @@ import kotlinx.coroutines.withContext
 @Composable
 fun LibrosScreen() {
     var libros by remember { mutableStateOf<List<Map<String, String>>>(emptyList()) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val librosFiltrados = libros.filter {
+        it["titulo"]?.contains(searchQuery, ignoreCase = true) == true
+    }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -36,8 +41,17 @@ fun LibrosScreen() {
             text = "Catálogo de Libros",
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier
-                .padding(16.dp)
+                .padding(top = 16.dp, start = 16.dp, end = 16.dp)
                 .align(Alignment.CenterHorizontally)
+        )
+
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = { Text("Buscar por título...") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         )
 
         LazyColumn(
@@ -45,7 +59,7 @@ fun LibrosScreen() {
                 .fillMaxSize()
                 .padding(horizontal = 12.dp)
         ) {
-            items(libros) { libro ->
+            items(librosFiltrados) { libro ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()

@@ -12,10 +12,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
+import com.example.bookcloudapp.R
 import com.example.bookcloudapp.network.ApiService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -49,6 +53,9 @@ fun FavoritosScreen(navController: NavHostController) {
     }
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+
+        Spacer(modifier = Modifier.height(40.dp)) // ✅ separa del borde superior
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -92,57 +99,100 @@ fun FavoritosScreen(navController: NavHostController) {
             }
         }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp)
-        ) {
-            items(librosFavoritos) { libro ->
-                Card(
+        // ... (todo lo anterior igual)
+        if (librosFavoritos.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp)
+            ) {
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                    shape = RoundedCornerShape(16.dp)
+                        .align(Alignment.Center)
+                        .padding(bottom = 80.dp), // sube ligeramente por encima del botón
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Row(
+                    Image(
+                        painter = painterResource(id = R.drawable.fox_guide_confused),
+                        contentDescription = "Zorro confundido",
                         modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = "¿Es que acaso no te interesa leer ningún libro?",
+                        fontSize = 18.sp,
+                        color = Color(0xFF2E7D32),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
+                }
+
+                Button(
+                    onClick = { navController.navigate("libros") },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth(0.8f)
+                        .padding(bottom = 24.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA5D6A7))
+                ) {
+                    Text("Busquemos tu siguiente lectura")
+                }
+            }
+    } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp)
+            ) {
+                items(librosFavoritos) { libro ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Image(
-                            painter = rememberAsyncImagePainter(libro["portada"]),
-                            contentDescription = "Portada del libro",
+                        Row(
                             modifier = Modifier
-                                .size(100.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                        )
-
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        Column(
-                            modifier = Modifier.fillMaxWidth()
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = libro["titulo"] ?: "Sin título",
-                                style = MaterialTheme.typography.titleMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                            Image(
+                                painter = rememberAsyncImagePainter(libro["portada"]),
+                                contentDescription = "Portada del libro",
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .clip(RoundedCornerShape(12.dp))
                             )
-                            Text(
-                                text = libro["autor"] ?: "Autor desconocido",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = libro["descripcion"] ?: "",
-                                style = MaterialTheme.typography.bodySmall,
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis
-                            )
+
+                            Spacer(modifier = Modifier.width(16.dp))
+
+                            Column(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = libro["titulo"] ?: "Sin título",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = libro["autor"] ?: "Autor desconocido",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = libro["descripcion"] ?: "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 3,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
                 }

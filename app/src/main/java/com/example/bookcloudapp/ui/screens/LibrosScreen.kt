@@ -27,6 +27,10 @@ import com.example.bookcloudapp.network.ApiService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.navigation.NavHostController
+import coil.ImageLoader
+import coil.compose.rememberAsyncImagePainter
+import okhttp3.OkHttpClient
+
 
 @Composable
 fun LibrosScreen(navController: NavHostController) {
@@ -150,6 +154,25 @@ fun LibrosScreen(navController: NavHostController) {
                     val id = libro["id"]?.takeIf { it.isNotBlank() } ?: libro["titulo"] ?: return@items
                     val esFavorito = favoritos[id] ?: false
 
+                    // Image loader con cabecera para Google Books
+                    val imageLoader = ImageLoader.Builder(LocalContext.current)
+                        .okHttpClient {
+                            OkHttpClient.Builder()
+                                .addInterceptor { chain ->
+                                    val newRequest = chain.request().newBuilder()
+                                        .addHeader("User-Agent", "Mozilla/5.0")
+                                        .build()
+                                    chain.proceed(newRequest)
+                                }
+                                .build()
+                        }
+                        .build()
+
+                    val painter = rememberAsyncImagePainter(
+                        model = libro["portada"],
+                        imageLoader = imageLoader
+                    )
+
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -165,7 +188,7 @@ fun LibrosScreen(navController: NavHostController) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Image(
-                                painter = rememberAsyncImagePainter(libro["portada"]),
+                                painter = painter,
                                 contentDescription = "Portada del libro",
                                 modifier = Modifier
                                     .size(100.dp)

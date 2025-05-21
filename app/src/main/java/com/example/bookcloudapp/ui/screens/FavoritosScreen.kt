@@ -74,17 +74,6 @@ fun FavoritosScreen(navController: NavHostController) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Button(
-                    onClick = { navController.popBackStack() },
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        contentColor = MaterialTheme.colorScheme.onSecondary
-                    )
-                ) {
-                    Text("← Volver")
-                }
 
                 Text(
                     text = "Mis Favoritos",
@@ -131,7 +120,7 @@ fun FavoritosScreen(navController: NavHostController) {
                         )
                         Spacer(modifier = Modifier.height(24.dp))
                         Text(
-                            text = "¿Es que acaso no te interesa leer ningún libro?",
+                            text = "¿No te gustó ningún libro?",
                             fontSize = 18.sp,
                             color = Color(0xFF2E7D32),
                             style = MaterialTheme.typography.titleMedium,

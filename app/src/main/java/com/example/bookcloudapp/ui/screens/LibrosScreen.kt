@@ -60,6 +60,7 @@ fun LibrosScreen(navController: NavHostController) {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Fondo bosque
         Image(
             painter = painterResource(id = R.drawable.fondo_bosque),
             contentDescription = null,
@@ -69,6 +70,15 @@ fun LibrosScreen(navController: NavHostController) {
                 .alpha(0.8f)
         )
 
+        // Imagen fija del zorro leyendo arriba a la derecha
+        Image(
+            painter = painterResource(id = R.drawable.zorro_leyendo),
+            contentDescription = "Zorro leyendo",
+            modifier = Modifier
+                .size(150.dp)
+                .align(Alignment.TopEnd)
+                .padding(top = 8.dp, end = 8.dp)
+        )
 
         Column(modifier = Modifier.fillMaxSize()) {
             Spacer(modifier = Modifier.height(32.dp))

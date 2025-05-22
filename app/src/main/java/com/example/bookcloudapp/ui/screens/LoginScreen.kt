@@ -4,7 +4,11 @@ import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -16,8 +20,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.bookcloudapp.R
 import com.example.bookcloudapp.network.ApiService
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 
 @Composable
 fun LoginScreen(
@@ -30,6 +32,7 @@ fun LoginScreen(
     var isLoading by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Fondo de imagen translúcido
         Image(
             painter = painterResource(id = R.drawable.fondo_inicio),
             contentDescription = null,
@@ -43,7 +46,6 @@ fun LoginScreen(
                 ) { }
         )
 
-
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
@@ -55,65 +57,73 @@ fun LoginScreen(
                 )
             },
             content = { padding ->
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(padding)
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
                 ) {
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Correo electrónico") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    OutlinedTextField(
-                        value = contrasena,
-                        onValueChange = { contrasena = it },
-                        label = { Text("Contraseña") },
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 16.dp)
-                    )
+                            .padding(horizontal = 16.dp)
+                            .background(
+                                color = Color.White.copy(alpha = 0.8f),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .padding(24.dp)
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            OutlinedTextField(
+                                value = email,
+                                onValueChange = { email = it },
+                                label = { Text("Correo electrónico") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
 
-                    Button(
-                        onClick = {
-                            if (email.isNotBlank() && contrasena.isNotBlank()) {
-                                isLoading = true
-                                ApiService.login(email, contrasena) { success, mensaje ->
-                                    isLoading = false
-                                    Handler(Looper.getMainLooper()).post {
-                                        if (success) {
-                                            context.getSharedPreferences("bookcloud_prefs", 0)
-                                                .edit()
-                                                .putString("token", ApiService.token)
-                                                .apply()
-                                            onLoginSuccess()
-                                        } else {
-                                            Toast.makeText(context, mensaje ?: "Error", Toast.LENGTH_SHORT).show()
+                            OutlinedTextField(
+                                value = contrasena,
+                                onValueChange = { contrasena = it },
+                                label = { Text("Contraseña") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Button(
+                                onClick = {
+                                    if (email.isNotBlank() && contrasena.isNotBlank()) {
+                                        isLoading = true
+                                        ApiService.login(email, contrasena) { success, mensaje ->
+                                            isLoading = false
+                                            Handler(Looper.getMainLooper()).post {
+                                                if (success) {
+                                                    context.getSharedPreferences("bookcloud_prefs", 0)
+                                                        .edit()
+                                                        .putString("token", ApiService.token)
+                                                        .apply()
+                                                    onLoginSuccess()
+                                                } else {
+                                                    Toast.makeText(context, mensaje ?: "Error", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
                                         }
+                                    } else {
+                                        Toast.makeText(context, "Completa todos los campos", Toast.LENGTH_SHORT).show()
                                     }
-                                }
-                            } else {
-                                Toast.makeText(context, "Completa todos los campos", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !isLoading
+                            ) {
+                                Text(text = if (isLoading) "Cargando..." else "Iniciar sesión")
                             }
-                        },
-                        modifier = Modifier
-                            .padding(top = 24.dp)
-                            .fillMaxWidth(),
-                        enabled = !isLoading
-                    ) {
-                        Text(text = if (isLoading) "Cargando..." else "Iniciar sesión")
-                    }
 
-                    TextButton(
-                        onClick = onGoToRegister,
-                        modifier = Modifier.padding(top = 12.dp)
-                    ) {
-                        Text("¿No tienes cuenta? Regístrate aquí")
+                            TextButton(onClick = onGoToRegister) {
+                                Text("¿No tienes cuenta? Regístrate aquí")
+                            }
+                        }
                     }
                 }
             }

@@ -12,7 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -32,7 +32,7 @@ fun LoginScreen(
     var isLoading by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Fondo de imagen translúcido
+        // Fondo translúcido
         Image(
             painter = painterResource(id = R.drawable.fondo_inicio),
             contentDescription = null,
@@ -52,76 +52,91 @@ fun LoginScreen(
                 Text(
                     text = "Iniciar sesión",
                     style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier
-                        .padding(16.dp)
+                    modifier = Modifier.padding(16.dp)
                 )
             },
             content = { padding ->
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
+                        .padding(padding)
                 ) {
-                    Box(
+                    Column(
+                        verticalArrangement = Arrangement.Top,
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxSize()
                             .padding(horizontal = 16.dp)
-                            .background(
-                                color = Color.White.copy(alpha = 0.8f),
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                            .padding(24.dp)
                     ) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.fillMaxWidth()
+                        Spacer(modifier = Modifier.height(200.dp))
+
+                        Image(
+                            painter = painterResource(id = R.drawable.fox_icon),
+                            contentDescription = "Zorro",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .padding(bottom = 2.dp)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .shadow(8.dp, RoundedCornerShape(16.dp))
+                                .background(
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                                .padding(24.dp)
                         ) {
-                            OutlinedTextField(
-                                value = email,
-                                onValueChange = { email = it },
-                                label = { Text("Correo electrónico") },
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.fillMaxWidth()
-                            )
+                            ) {
+                                OutlinedTextField(
+                                    value = email,
+                                    onValueChange = { email = it },
+                                    label = { Text("Correo electrónico") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
 
-                            OutlinedTextField(
-                                value = contrasena,
-                                onValueChange = { contrasena = it },
-                                label = { Text("Contraseña") },
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                                OutlinedTextField(
+                                    value = contrasena,
+                                    onValueChange = { contrasena = it },
+                                    label = { Text("Contraseña") },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
 
-                            Button(
-                                onClick = {
-                                    if (email.isNotBlank() && contrasena.isNotBlank()) {
-                                        isLoading = true
-                                        ApiService.login(email, contrasena) { success, mensaje ->
-                                            isLoading = false
-                                            Handler(Looper.getMainLooper()).post {
-                                                if (success) {
-                                                    context.getSharedPreferences("bookcloud_prefs", 0)
-                                                        .edit()
-                                                        .putString("token", ApiService.token)
-                                                        .apply()
-                                                    onLoginSuccess()
-                                                } else {
-                                                    Toast.makeText(context, mensaje ?: "Error", Toast.LENGTH_SHORT).show()
+                                Button(
+                                    onClick = {
+                                        if (email.isNotBlank() && contrasena.isNotBlank()) {
+                                            isLoading = true
+                                            ApiService.login(email, contrasena) { success, mensaje ->
+                                                isLoading = false
+                                                Handler(Looper.getMainLooper()).post {
+                                                    if (success) {
+                                                        context.getSharedPreferences("bookcloud_prefs", 0)
+                                                            .edit()
+                                                            .putString("token", ApiService.token)
+                                                            .apply()
+                                                        onLoginSuccess()
+                                                    } else {
+                                                        Toast.makeText(context, mensaje ?: "Error", Toast.LENGTH_SHORT).show()
+                                                    }
                                                 }
                                             }
+                                        } else {
+                                            Toast.makeText(context, "Completa todos los campos", Toast.LENGTH_SHORT).show()
                                         }
-                                    } else {
-                                        Toast.makeText(context, "Completa todos los campos", Toast.LENGTH_SHORT).show()
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                enabled = !isLoading
-                            ) {
-                                Text(text = if (isLoading) "Cargando..." else "Iniciar sesión")
-                            }
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    enabled = !isLoading
+                                ) {
+                                    Text(text = if (isLoading) "Cargando..." else "Iniciar sesión")
+                                }
 
-                            TextButton(onClick = onGoToRegister) {
-                                Text("¿No tienes cuenta? Regístrate aquí")
+                                TextButton(onClick = onGoToRegister) {
+                                    Text("¿No tienes cuenta? Regístrate aquí")
+                                }
                             }
                         }
                     }

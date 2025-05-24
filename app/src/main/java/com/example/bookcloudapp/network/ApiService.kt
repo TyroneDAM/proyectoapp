@@ -1,5 +1,6 @@
 package com.example.bookcloudapp.network
 
+import com.example.bookcloudapp.model.Reserva
 import okhttp3.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -114,13 +115,13 @@ object ApiService {
                         for (i in 0 until jsonArray.length()) {
                             val obj = jsonArray.getJSONObject(i)
                             val libro = mapOf(
-                                "id" to obj.optString("id", ""), // ← Añadimos el ID aquí
+                                "id" to obj.optString("id", ""),
                                 "titulo" to obj.optString("titulo", ""),
                                 "autor" to obj.optString("autor", ""),
                                 "portada" to obj.optString("portada", ""),
-                                "descripcion" to obj.optString("descripcion", "")
+                                "descripcion" to obj.optString("descripcion", ""),
+                                "isbn" to obj.optString("isbn", "")
                             )
-
                             libros.add(libro)
                         }
                     } catch (e: Exception) {
@@ -132,4 +133,112 @@ object ApiService {
         })
     }
 
+    fun obtenerReservas(callback: (List<Reserva>) -> Unit) {
+        val tokenLocal = token ?: return callback(emptyList())
+
+        val request = Request.Builder()
+            .url(BASE_URL + "data/reservas.php")
+            .get()
+            .addHeader("Authorization", "Bearer $tokenLocal")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                callback(emptyList())
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val bodyStr = response.body?.string()
+                val reservas = mutableListOf<Reserva>()
+
+                if (response.isSuccessful && !bodyStr.isNullOrEmpty()) {
+                    try {
+                        val jsonArray = JSONArray(bodyStr)
+                        for (i in 0 until jsonArray.length()) {
+                            val obj = jsonArray.getJSONObject(i)
+                            val reserva = Reserva(
+                                id_reserva = obj.optString("id_reserva", ""),
+                                isbn = obj.optString("isbn", ""),
+                                titulo = obj.optString("titulo", ""),
+                                autor = obj.optString("autor", ""),
+                                imagen = obj.optString("imagen", ""),
+                                estado = obj.optString("estado", "activa")
+                            )
+                            reservas.add(reserva)
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                callback(reservas)
+            }
+        })
+    }
+
+    fun cancelarReserva(idReserva: String, callback: (Boolean, String) -> Unit) {
+        val tokenLocal = token ?: return callback(false, "No autenticado")
+
+        val json = JSONObject().put("id_reserva", idReserva)
+        val body = json.toString().toRequestBody("application/json".toMediaType())
+
+        val request = Request.Builder()
+            .url(BASE_URL + "data/cancelar_reserva.php")
+            .post(body)
+            .addHeader("Authorization", "Bearer $tokenLocal")
+            .addHeader("Content-Type", "application/json")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                callback(false, "Error de red: ${e.message}")
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val mensaje = response.body?.string()?.let {
+                    JSONObject(it).optString("mensaje", "Error")
+                } ?: "Error"
+                callback(response.isSuccessful, mensaje)
+            }
+        })
+    }
+
+    // ✅ NUEVO: Reservar libro por ISBN
+    fun reservarLibro(isbn: String, callback: (Boolean, String) -> Unit) {
+        val tokenLocal = token
+        if (tokenLocal.isNullOrEmpty()) {
+            callback(false, "Token no disponible")
+            return
+        }
+
+        val formBody = FormBody.Builder()
+            .add("isbn", isbn)
+            .build()
+
+        val request = Request.Builder()
+            .url(BASE_URL + "data/reservar.php")
+            .post(formBody)
+            .addHeader("Authorization", "Bearer $tokenLocal")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                callback(false, "Error de red: ${e.message}")
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val bodyStr = response.body?.string()
+                if (bodyStr != null) {
+                    try {
+                        val json = JSONObject(bodyStr)
+                        val mensaje = json.optString("mensaje", "Sin mensaje")
+                        callback(true, mensaje)
+                    } catch (e: Exception) {
+                        callback(false, "Error al interpretar la respuesta")
+                    }
+                } else {
+                    callback(false, "Respuesta vacía")
+                }
+            }
+        })
+    }
 }

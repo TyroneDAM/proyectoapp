@@ -2,7 +2,6 @@ package com.example.bookcloudapp.ui.screens
 
 import android.content.Context
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,24 +20,29 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import com.example.bookcloudapp.R
 import com.example.bookcloudapp.network.ApiService
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.navigation.NavHostController
-import coil.ImageLoader
-import coil.compose.rememberAsyncImagePainter
 import okhttp3.OkHttpClient
-
 
 @Composable
 fun LibrosScreen(navController: NavHostController) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("favoritos", Context.MODE_PRIVATE) }
+    val prefsReservas = remember { context.getSharedPreferences("reservas", Context.MODE_PRIVATE) }
+
     var libros by remember { mutableStateOf<List<Map<String, String>>>(emptyList()) }
     var searchQuery by remember { mutableStateOf("") }
     val favoritos = remember { mutableStateMapOf<String, Boolean>() }
+    val reservados = remember { mutableStateMapOf<String, Boolean>() }
+
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     val librosFiltrados = libros.filter {
         it["titulo"]?.contains(searchQuery, ignoreCase = true) == true
@@ -48,8 +52,12 @@ fun LibrosScreen(navController: NavHostController) {
         withContext(Dispatchers.IO) {
             libros.forEach { libro ->
                 val id = libro["id"]?.takeIf { it.isNotBlank() } ?: libro["titulo"]
+                val isbn = libro["isbn"]
                 if (id != null) {
                     favoritos[id] = prefs.getBoolean(id, false)
+                }
+                if (!isbn.isNullOrEmpty()) {
+                    reservados[isbn] = prefsReservas.getBoolean(isbn, false)
                 }
             }
         }
@@ -63,173 +71,168 @@ fun LibrosScreen(navController: NavHostController) {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Fondo bosque
-        Image(
-            painter = painterResource(id = R.drawable.fondo_bosque),
-            contentDescription = null,
-            contentScale = ContentScale.FillHeight,
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(0.8f)
-        )
+    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
 
-        // Imagen fija del zorro leyendo arriba a la derecha
-        Image(
-            painter = painterResource(id = R.drawable.zorro_leyendo),
-            contentDescription = "Zorro leyendo",
-            modifier = Modifier
-                .size(150.dp)
-                .align(Alignment.TopEnd)
-                .padding(top = 8.dp, end = 8.dp)
-        )
+            Image(
+                painter = painterResource(id = R.drawable.fondo_bosque),
+                contentDescription = null,
+                contentScale = ContentScale.FillHeight,
+                modifier = Modifier.fillMaxSize().alpha(0.8f)
+            )
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Row(
+            Image(
+                painter = painterResource(id = R.drawable.zorro_leyendo),
+                contentDescription = "Zorro leyendo",
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        text = "Mi Biblioteca",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row {
-                        Button(
-                            onClick = { navController.navigate("favoritos") },
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFA5D6A7),
-                                contentColor = Color.Black
-                            )
-                        ) {
-                            Text("Favoritos")
-                        }
+                    .size(150.dp)
+                    .align(Alignment.TopEnd)
+                    .padding(top = 8.dp, end = 8.dp)
+            )
 
-                        Spacer(modifier = Modifier.width(8.dp))
+            Column(modifier = Modifier.fillMaxSize()) {
+                Spacer(modifier = Modifier.height(32.dp))
 
-                        Button(
-                            onClick = {
-                                val prefs = context.getSharedPreferences("bookcloud_prefs", Context.MODE_PRIVATE)
-                                prefs.edit().remove("token").apply()
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("Mi Biblioteca", style = MaterialTheme.typography.headlineSmall)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row {
+                            Button(onClick = { navController.navigate("favoritos") }) {
+                                Text("Favoritos")
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Button(onClick = { navController.navigate("reservas") }) {
+                                Text("Reservas")
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Button(onClick = {
+                                context.getSharedPreferences("bookcloud_prefs", Context.MODE_PRIVATE)
+                                    .edit().remove("token").apply()
                                 navController.navigate("login") {
                                     popUpTo("libros") { inclusive = true }
                                 }
-                            },
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error,
-                                contentColor = MaterialTheme.colorScheme.onError
-                            )
-                        ) {
-                            Text("Cerrar sesión")
+                            }) {
+                                Text("Cerrar sesión")
+                            }
                         }
                     }
                 }
-            }
 
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = { Text("Buscar por título...") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Buscar por título...") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                )
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 12.dp)
-            ) {
-                items(librosFiltrados) { libro ->
-                    val id = libro["id"]?.takeIf { it.isNotBlank() } ?: libro["titulo"] ?: return@items
-                    val esFavorito = favoritos[id] ?: false
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 12.dp)
+                ) {
+                    items(librosFiltrados) { libro ->
+                        val id = libro["id"]?.takeIf { it.isNotBlank() } ?: libro["titulo"] ?: return@items
+                        val isbn = libro["isbn"] ?: return@items
+                        val esFavorito = favoritos[id] ?: false
+                        val yaReservado = reservados[isbn] ?: false
 
-                    // Image loader con cabecera para Google Books
-                    val imageLoader = ImageLoader.Builder(LocalContext.current)
-                        .okHttpClient {
-                            OkHttpClient.Builder()
-                                .addInterceptor { chain ->
+                        val imageLoader = ImageLoader.Builder(context)
+                            .okHttpClient {
+                                OkHttpClient.Builder().addInterceptor { chain ->
                                     val newRequest = chain.request().newBuilder()
-                                        .addHeader("User-Agent", "Mozilla/5.0")
-                                        .build()
+                                        .addHeader("User-Agent", "Mozilla/5.0").build()
                                     chain.proceed(newRequest)
-                                }
-                                .build()
-                        }
-                        .build()
+                                }.build()
+                            }.build()
 
-                    val painter = rememberAsyncImagePainter(
-                        model = libro["portada"],
-                        imageLoader = imageLoader
-                    )
+                        val painter = rememberAsyncImagePainter(model = libro["portada"], imageLoader = imageLoader)
 
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Row(
+                        Card(
                             modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            shape = RoundedCornerShape(16.dp)
                         ) {
-                            Image(
-                                painter = painter,
-                                contentDescription = "Portada del libro",
-                                modifier = Modifier
-                                    .size(100.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                            )
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Image(
+                                        painter = painter,
+                                        contentDescription = "Portada del libro",
+                                        modifier = Modifier
+                                            .size(100.dp)
+                                            .clip(RoundedCornerShape(12.dp))
+                                    )
 
-                            Spacer(modifier = Modifier.width(16.dp))
+                                    Spacer(modifier = Modifier.width(16.dp))
 
-                            Column(
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = libro["titulo"] ?: "Sin título",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = libro["autor"] ?: "Autor desconocido",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = libro["descripcion"] ?: "",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    maxLines = 3,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = libro["titulo"] ?: "Sin título",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Text(
+                                            text = libro["autor"] ?: "Autor desconocido",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = libro["descripcion"] ?: "",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            maxLines = 3,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
 
-                            IconButton(onClick = {
-                                val nuevoValor = !esFavorito
-                                favoritos[id] = nuevoValor
-                                prefs.edit().putBoolean(id, nuevoValor).apply()
-                            }) {
-                                Icon(
-                                    imageVector = if (esFavorito) Icons.Filled.Star else Icons.Outlined.Star,
-                                    contentDescription = "Favorito",
-                                    tint = if (esFavorito) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                                )
+                                    IconButton(onClick = {
+                                        val nuevoValor = !esFavorito
+                                        favoritos[id] = nuevoValor
+                                        prefs.edit().putBoolean(id, nuevoValor).apply()
+                                    }) {
+                                        Icon(
+                                            imageVector = if (esFavorito) Icons.Filled.Star else Icons.Outlined.Star,
+                                            contentDescription = "Favorito",
+                                            tint = if (esFavorito) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Button(
+                                    onClick = {
+                                        ApiService.reservarLibro(isbn) { success, mensaje ->
+                                            if (success) {
+                                                reservados[isbn] = true
+                                                prefsReservas.edit().putBoolean(isbn, true).apply()
+                                            }
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar(mensaje)
+                                            }
+                                        }
+                                    },
+                                    enabled = !yaReservado,
+                                    modifier = Modifier.align(Alignment.End)
+                                ) {
+                                    Text(if (yaReservado) "Reservado" else "📚 Reservar")
+                                }
                             }
                         }
                     }

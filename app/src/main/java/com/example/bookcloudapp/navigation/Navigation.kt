@@ -7,7 +7,8 @@ import androidx.navigation.compose.composable
 import com.example.bookcloudapp.ui.screens.LoginScreen
 import com.example.bookcloudapp.ui.screens.RegisterScreen
 import com.example.bookcloudapp.ui.screens.LibrosScreen
-import com.example.bookcloudapp.ui.screens.FavoritosScreen // ✅ nueva importación
+import com.example.bookcloudapp.ui.screens.FavoritosScreen
+import com.example.bookcloudapp.ui.screens.ReservasScreen
 
 @Composable
 fun AppNavigation(navController: NavHostController, startDestination: String) {
@@ -36,11 +37,17 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
         }
 
         composable("libros") {
-            LibrosScreen(navController) // ✅ importante para pasar el navController
+            LibrosScreen(navController)
         }
 
         composable("favoritos") {
             FavoritosScreen(navController)
         }
+
+        // ✅ ReservasScreen ya no necesita parámetros externos
+        composable("reservas") {
+            ReservasScreen()
+        }
     }
 }
+

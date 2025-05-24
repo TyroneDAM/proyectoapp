@@ -202,7 +202,6 @@ object ApiService {
         })
     }
 
-    // ✅ NUEVO: Reservar libro por ISBN
     fun reservarLibro(isbn: String, callback: (Boolean, String) -> Unit) {
         val tokenLocal = token
         if (tokenLocal.isNullOrEmpty()) {
@@ -210,14 +209,14 @@ object ApiService {
             return
         }
 
-        val formBody = FormBody.Builder()
-            .add("isbn", isbn)
-            .build()
+        val json = JSONObject().put("isbn", isbn)
+        val body = json.toString().toRequestBody("application/json".toMediaType())
 
         val request = Request.Builder()
             .url(BASE_URL + "data/reservar.php")
-            .post(formBody)
+            .post(body)
             .addHeader("Authorization", "Bearer $tokenLocal")
+            .addHeader("Content-Type", "application/json")
             .build()
 
         client.newCall(request).enqueue(object : Callback {
@@ -231,7 +230,7 @@ object ApiService {
                     try {
                         val json = JSONObject(bodyStr)
                         val mensaje = json.optString("mensaje", "Sin mensaje")
-                        callback(true, mensaje)
+                        callback(response.isSuccessful, mensaje)
                     } catch (e: Exception) {
                         callback(false, "Error al interpretar la respuesta")
                     }
@@ -241,4 +240,5 @@ object ApiService {
             }
         })
     }
+
 }

@@ -20,24 +20,26 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import coil.ImageLoader
 import coil.compose.rememberAsyncImagePainter
 import com.example.bookcloudapp.R
+import com.example.bookcloudapp.model.Reserva
 import com.example.bookcloudapp.network.ApiService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.navigation.NavHostController
 import okhttp3.OkHttpClient
 
 @Composable
 fun LibrosScreen(navController: NavHostController) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("favoritos", Context.MODE_PRIVATE) }
-    val prefsReservas = remember { context.getSharedPreferences("reservas", Context.MODE_PRIVATE) }
 
     var libros by remember { mutableStateOf<List<Map<String, String>>>(emptyList()) }
+    var reservas by remember { mutableStateOf<List<Reserva>>(emptyList()) }
     var searchQuery by remember { mutableStateOf("") }
+
     val favoritos = remember { mutableStateMapOf<String, Boolean>() }
     val reservados = remember { mutableStateMapOf<String, Boolean>() }
 
@@ -48,25 +50,33 @@ fun LibrosScreen(navController: NavHostController) {
         it["titulo"]?.contains(searchQuery, ignoreCase = true) == true
     }
 
-    LaunchedEffect(libros) {
-        withContext(Dispatchers.IO) {
-            libros.forEach { libro ->
-                val id = libro["id"]?.takeIf { it.isNotBlank() } ?: libro["titulo"]
-                val isbn = libro["isbn"]
-                if (id != null) {
-                    favoritos[id] = prefs.getBoolean(id, false)
-                }
-                if (!isbn.isNullOrEmpty()) {
-                    reservados[isbn] = prefsReservas.getBoolean(isbn, false)
-                }
-            }
-        }
-    }
-
+    // Cargar libros
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             ApiService.obtenerLibros { lista ->
                 libros = lista
+            }
+        }
+    }
+
+    // Cargar reservas reales desde el servidor
+    LaunchedEffect(Unit) {
+        ApiService.obtenerReservas { lista ->
+            reservas = lista
+            val isbnsReservados = lista.filter { it.estado == "activa" }.map { it.isbn }
+            reservados.clear()
+            isbnsReservados.forEach { reservados[it] = true }
+        }
+    }
+
+    // Cargar favoritos del usuario
+    LaunchedEffect(libros) {
+        withContext(Dispatchers.IO) {
+            libros.forEach { libro ->
+                val id = libro["id"]?.takeIf { it.isNotBlank() } ?: libro["titulo"]
+                if (id != null) {
+                    favoritos[id] = prefs.getBoolean(id, false)
+                }
             }
         }
     }
@@ -107,15 +117,11 @@ fun LibrosScreen(navController: NavHostController) {
                             Button(onClick = { navController.navigate("favoritos") }) {
                                 Text("Favoritos")
                             }
-
                             Spacer(modifier = Modifier.width(8.dp))
-
                             Button(onClick = { navController.navigate("reservas") }) {
                                 Text("Reservas")
                             }
-
                             Spacer(modifier = Modifier.width(8.dp))
-
                             Button(onClick = {
                                 context.getSharedPreferences("bookcloud_prefs", Context.MODE_PRIVATE)
                                     .edit().remove("token").apply()
@@ -177,30 +183,12 @@ fun LibrosScreen(navController: NavHostController) {
                                             .size(100.dp)
                                             .clip(RoundedCornerShape(12.dp))
                                     )
-
                                     Spacer(modifier = Modifier.width(16.dp))
-
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = libro["titulo"] ?: "Sin título",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                        Text(
-                                            text = libro["autor"] ?: "Autor desconocido",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = libro["descripcion"] ?: "",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            maxLines = 3,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
+                                        Text(libro["titulo"] ?: "", style = MaterialTheme.typography.titleMedium)
+                                        Text(libro["autor"] ?: "", style = MaterialTheme.typography.bodyMedium)
+                                        Text(libro["descripcion"] ?: "", maxLines = 3, overflow = TextOverflow.Ellipsis)
                                     }
-
                                     IconButton(onClick = {
                                         val nuevoValor = !esFavorito
                                         favoritos[id] = nuevoValor
@@ -213,15 +201,12 @@ fun LibrosScreen(navController: NavHostController) {
                                         )
                                     }
                                 }
-
                                 Spacer(modifier = Modifier.height(8.dp))
-
                                 Button(
                                     onClick = {
                                         ApiService.reservarLibro(isbn) { success, mensaje ->
                                             if (success) {
                                                 reservados[isbn] = true
-                                                prefsReservas.edit().putBoolean(isbn, true).apply()
                                             }
                                             scope.launch {
                                                 snackbarHostState.showSnackbar(mensaje)

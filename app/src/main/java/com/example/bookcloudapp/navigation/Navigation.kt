@@ -2,13 +2,11 @@ package com.example.bookcloudapp.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.bookcloudapp.ui.screens.LoginScreen
-import com.example.bookcloudapp.ui.screens.RegisterScreen
-import com.example.bookcloudapp.ui.screens.LibrosScreen
-import com.example.bookcloudapp.ui.screens.FavoritosScreen
-import com.example.bookcloudapp.ui.screens.ReservasScreen
+import androidx.navigation.navArgument
+import com.example.bookcloudapp.ui.screens.*
 
 @Composable
 fun AppNavigation(navController: NavHostController, startDestination: String) {
@@ -47,6 +45,16 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
         composable("reservas") {
             ReservasScreen(navController)
         }
+
+        // 🆕 Nueva pantalla detalle con argumento ISBN
+        composable(
+            "detalleLibro?isbn={isbn}",
+            arguments = listOf(navArgument("isbn") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val isbn = backStackEntry.arguments?.getString("isbn")
+            if (isbn != null) {
+                DetalleLibroScreen(isbn = isbn)
+            }
+        }
     }
 }
-

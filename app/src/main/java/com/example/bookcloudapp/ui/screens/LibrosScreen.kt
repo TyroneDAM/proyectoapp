@@ -1,7 +1,9 @@
 package com.example.bookcloudapp.ui.screens
 
 import android.content.Context
+import android.net.Uri
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,6 +32,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun LibrosScreen(navController: NavHostController) {
@@ -50,14 +54,12 @@ fun LibrosScreen(navController: NavHostController) {
         it["titulo"]?.contains(searchQuery, ignoreCase = true) == true
     }
 
-    // Cargar libros
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             ApiService.obtenerLibros { lista -> libros = lista }
         }
     }
 
-    // Cargar reservas reales desde el servidor
     LaunchedEffect(Unit) {
         ApiService.obtenerReservas { lista ->
             reservas = lista
@@ -67,7 +69,6 @@ fun LibrosScreen(navController: NavHostController) {
         }
     }
 
-    // Cargar favoritos del usuario
     LaunchedEffect(libros) {
         withContext(Dispatchers.IO) {
             libros.forEach { libro ->
@@ -171,10 +172,22 @@ fun LibrosScreen(navController: NavHostController) {
 
                         val painter = rememberAsyncImagePainter(model = libro["portada"], imageLoader = imageLoader)
 
+                        val rutaDetalle = "detalleLibro/" +
+                                URLEncoder.encode(libro["titulo"] ?: "", StandardCharsets.UTF_8.toString()) + "/" +
+                                URLEncoder.encode(libro["autor"] ?: "", StandardCharsets.UTF_8.toString()) + "/" +
+                                URLEncoder.encode(libro["genero"] ?: "", StandardCharsets.UTF_8.toString()) + "/" +
+                                URLEncoder.encode(libro["editorial"] ?: "", StandardCharsets.UTF_8.toString()) + "/" +
+                                URLEncoder.encode(libro["fecha"] ?: "", StandardCharsets.UTF_8.toString()) + "/" +
+                                URLEncoder.encode(libro["descripcion"] ?: "", StandardCharsets.UTF_8.toString()) + "/" +
+                                URLEncoder.encode(libro["portada"] ?: "", StandardCharsets.UTF_8.toString())
+
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 8.dp)
+                                .clickable {
+                                    navController.navigate("detalleLibro?isbn=${Uri.encode(isbn)}")
+                                },
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                             shape = RoundedCornerShape(16.dp)

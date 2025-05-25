@@ -41,13 +41,13 @@ fun DetalleLibroScreen(isbn: String?) {
 
     libro?.let { datos ->
         Box(modifier = Modifier.fillMaxSize()) {
-
-            // Fondo bosque transparente
             Image(
                 painter = painterResource(id = R.drawable.fondo_bosque),
                 contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize().alpha(0.8f)
+                contentScale = ContentScale.FillHeight,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(0.7f)
             )
 
             Column(
@@ -56,6 +56,7 @@ fun DetalleLibroScreen(isbn: String?) {
                     .padding(16.dp)
             ) {
                 val imageLoader = ImageLoader.Builder(LocalContext.current).build()
+
                 val painter = rememberAsyncImagePainter(model = datos["portada"], imageLoader = imageLoader)
 
                 Image(
@@ -95,7 +96,7 @@ fun DetalleLibroScreen(isbn: String?) {
                 )
 
                 Text(
-                    text = "Publicado: ${datos["fecha"] ?: "No disponible"}",
+                    text = "Publicado: ${datos["fecha_publicacion"] ?: "No disponible"}",
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(top = 4.dp)
                 )

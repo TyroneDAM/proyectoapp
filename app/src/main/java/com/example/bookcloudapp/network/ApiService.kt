@@ -120,7 +120,10 @@ object ApiService {
                                 "autor" to obj.optString("autor", ""),
                                 "portada" to obj.optString("portada", ""),
                                 "descripcion" to obj.optString("descripcion", ""),
-                                "isbn" to obj.optString("isbn", "")
+                                "isbn" to obj.optString("isbn", ""),
+                                "editorial" to obj.optString("editorial", ""),
+                                "genero" to obj.optString("genero", ""),
+                                "fecha_publicacion" to obj.optString("fecha_publicacion", "")
                             )
                             libros.add(libro)
                         }

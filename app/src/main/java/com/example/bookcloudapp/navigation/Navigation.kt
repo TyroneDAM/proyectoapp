@@ -44,9 +44,8 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
             FavoritosScreen(navController)
         }
 
-        // ✅ ReservasScreen ya no necesita parámetros externos
         composable("reservas") {
-            ReservasScreen()
+            ReservasScreen(navController)
         }
     }
 }

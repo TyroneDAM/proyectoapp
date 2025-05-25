@@ -53,9 +53,7 @@ fun LibrosScreen(navController: NavHostController) {
     // Cargar libros
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
-            ApiService.obtenerLibros { lista ->
-                libros = lista
-            }
+            ApiService.obtenerLibros { lista -> libros = lista }
         }
     }
 
@@ -74,9 +72,7 @@ fun LibrosScreen(navController: NavHostController) {
         withContext(Dispatchers.IO) {
             libros.forEach { libro ->
                 val id = libro["id"]?.takeIf { it.isNotBlank() } ?: libro["titulo"]
-                if (id != null) {
-                    favoritos[id] = prefs.getBoolean(id, false)
-                }
+                if (id != null) favoritos[id] = prefs.getBoolean(id, false)
             }
         }
     }
@@ -95,9 +91,9 @@ fun LibrosScreen(navController: NavHostController) {
                 painter = painterResource(id = R.drawable.zorro_leyendo),
                 contentDescription = "Zorro leyendo",
                 modifier = Modifier
-                    .size(150.dp)
+                    .size(100.dp)
                     .align(Alignment.TopEnd)
-                    .padding(top = 8.dp, end = 8.dp)
+                    .padding(top = 4.dp, end = 4.dp)
             )
 
             Column(modifier = Modifier.fillMaxSize()) {
@@ -114,21 +110,30 @@ fun LibrosScreen(navController: NavHostController) {
                         Text("Mi Biblioteca", style = MaterialTheme.typography.headlineSmall)
                         Spacer(modifier = Modifier.height(4.dp))
                         Row {
-                            Button(onClick = { navController.navigate("favoritos") }) {
+                            Button(
+                                onClick = { navController.navigate("favoritos") },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784))
+                            ) {
                                 Text("Favoritos")
                             }
                             Spacer(modifier = Modifier.width(8.dp))
-                            Button(onClick = { navController.navigate("reservas") }) {
+                            Button(
+                                onClick = { navController.navigate("reservas") },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB74D))
+                            ) {
                                 Text("Reservas")
                             }
                             Spacer(modifier = Modifier.width(8.dp))
-                            Button(onClick = {
-                                context.getSharedPreferences("bookcloud_prefs", Context.MODE_PRIVATE)
-                                    .edit().remove("token").apply()
-                                navController.navigate("login") {
-                                    popUpTo("libros") { inclusive = true }
-                                }
-                            }) {
+                            Button(
+                                onClick = {
+                                    context.getSharedPreferences("bookcloud_prefs", Context.MODE_PRIVATE)
+                                        .edit().remove("token").apply()
+                                    navController.navigate("login") {
+                                        popUpTo("libros") { inclusive = true }
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            ) {
                                 Text("Cerrar sesión")
                             }
                         }
@@ -201,13 +206,13 @@ fun LibrosScreen(navController: NavHostController) {
                                         )
                                     }
                                 }
+
                                 Spacer(modifier = Modifier.height(8.dp))
+
                                 Button(
                                     onClick = {
                                         ApiService.reservarLibro(isbn) { success, mensaje ->
-                                            if (success) {
-                                                reservados[isbn] = true
-                                            }
+                                            if (success) reservados[isbn] = true
                                             scope.launch {
                                                 snackbarHostState.showSnackbar(mensaje)
                                             }

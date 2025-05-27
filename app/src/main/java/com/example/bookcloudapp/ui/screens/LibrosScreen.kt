@@ -114,7 +114,7 @@ fun LibrosScreen(navController: NavHostController) {
                             modifier = Modifier
                                 .size(32.dp)
                                 .clip(CircleShape)
-                                .background(Color.Black),
+                                .background(Color.LightGray),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(

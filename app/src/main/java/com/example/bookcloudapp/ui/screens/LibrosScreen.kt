@@ -20,6 +20,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -35,9 +36,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import java.text.Normalizer
+import androidx.compose.animation.core.*
+import kotlinx.coroutines.delay
 
 @Composable
 fun LibrosScreen(navController: NavHostController) {
@@ -57,6 +58,10 @@ fun LibrosScreen(navController: NavHostController) {
     var selectedGenero by remember { mutableStateOf("Todos") }
     val generos = listOf("Todos", "Economía", "Ficción", "Historia", "Infantil y Juvenil", "Novela Gráfica", "Poesía")
     var expanded by remember { mutableStateOf(false) }
+
+    var cargandoSorpresa by remember { mutableStateOf(false) }
+    var libroSorpresa by remember { mutableStateOf<Map<String, String>?>(null) }
+    var mostrarDialogo by remember { mutableStateOf(false) }
 
     val librosFiltrados = libros.filter {
         val coincideTitulo = it["titulo"]?.contains(searchQuery, ignoreCase = true) == true
@@ -152,6 +157,26 @@ fun LibrosScreen(navController: NavHostController) {
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) { Text("Cerrar sesión") }
+                }
+
+                Button(
+                    onClick = {
+                        if (librosFiltrados.isNotEmpty()) {
+                            cargandoSorpresa = true
+                            scope.launch {
+                                delay(1000)
+                                libroSorpresa = librosFiltrados.random()
+                                cargandoSorpresa = false
+                                mostrarDialogo = true
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6))
+                ) {
+                    Text("🎲 Sorpréndeme con un nuevo libro")
                 }
 
                 Row(
@@ -265,6 +290,82 @@ fun LibrosScreen(navController: NavHostController) {
                         }
                     }
                 }
+            }
+
+            //  carga botón sorpresa
+            if (cargandoSorpresa) {
+                val rotation by rememberInfiniteTransition().animateFloat(
+                    initialValue = 0f,
+                    targetValue = 360f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1000, easing = LinearEasing)
+                    )
+                )
+
+                AlertDialog(
+                    onDismissRequest = { cargandoSorpresa = false },
+                    confirmButton = {},
+                    title = { Text("El zorro está buscando...") },
+                    text = {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Image(
+                                painter = painterResource(id = R.drawable.zorro_mareado),
+                                contentDescription = "Zorro girando",
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .graphicsLayer { rotationZ = rotation }
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text("Espérame un segundo...", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                )
+            }
+
+            if (mostrarDialogo && libroSorpresa != null) {
+                AlertDialog(
+                    onDismissRequest = { mostrarDialogo = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            mostrarDialogo = false
+                            navController.navigate("detalleLibro?isbn=" + Uri.encode(libroSorpresa!!["isbn"]))
+                        }) {
+                            Text("Ver más")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { mostrarDialogo = false }) {
+                            Text("Cerrar")
+                        }
+                    },
+                    title = { Text("¡Tu libro sorpresa!") },
+                    text = {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            val imageLoader = ImageLoader.Builder(context)
+                                .okHttpClient {
+                                    OkHttpClient.Builder().addInterceptor { chain ->
+                                        val newRequest = chain.request().newBuilder()
+                                            .addHeader("User-Agent", "Mozilla/5.0").build()
+                                        chain.proceed(newRequest)
+                                    }.build()
+                                }.build()
+                            val painter = rememberAsyncImagePainter(
+                                model = libroSorpresa!!["portada"],
+                                imageLoader = imageLoader
+                            )
+                            Image(
+                                painter = painter,
+                                contentDescription = libroSorpresa!!["titulo"],
+                                modifier = Modifier
+                                    .size(140.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(libroSorpresa!!["titulo"] ?: "", style = MaterialTheme.typography.titleMedium)
+                            Text(libroSorpresa!!["autor"] ?: "", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                )
             }
         }
     }

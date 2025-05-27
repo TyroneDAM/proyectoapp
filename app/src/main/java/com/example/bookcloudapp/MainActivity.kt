@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.*
 import androidx.navigation.compose.rememberNavController
 import com.example.bookcloudapp.navigation.AppNavigation
@@ -17,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -41,7 +39,7 @@ class MainActivity : ComponentActivity() {
                 var startDestination by remember { mutableStateOf("login") }
 
                 LaunchedEffect(Unit) {
-                    delay(2000) // Simula carga o verifica si hay token
+                    delay(2000) // le pongo delay para que permita ver la pantalla de carga, no necesita tanto tiempo
                     if (!tokenGuardado.isNullOrBlank()) {
                         startDestination = "libros"
                     }
@@ -50,7 +48,7 @@ class MainActivity : ComponentActivity() {
 
                 if (isLoading) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        // Fondo sin transparencia
+
                         Image(
                             painter = painterResource(id = R.drawable.fondo_bosque),
                             contentDescription = null,
@@ -58,7 +56,6 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxSize()
                         )
 
-                        // Texto "Cargando..." centrado
                         Text(
                             text = "Cargando...",
                             style = MaterialTheme.typography.headlineSmall,
@@ -66,14 +63,13 @@ class MainActivity : ComponentActivity() {
 
                         )
 
-                        // Zorro saludando desde el lateral izquierdo
                         Image(
                             painter = painterResource(id = R.drawable.zorro_bienvenida),
                             contentDescription = "Zorro saludo",
                             modifier = Modifier
-                                .size(300.dp)                      // más grande
+                                .size(300.dp)
                                 .align(Alignment.BottomStart)
-                                .offset(x = (-47).dp, y = 16.dp)   // más a la izquierda y abajo de forma segura
+                                .offset(x = (-47).dp, y = 16.dp)
                         )
                     }
                 }

@@ -112,7 +112,7 @@ fun DetalleLibroScreen(isbn: String?) {
             }
         }
     } ?: run {
-        // Si no se encuentra el libro
+
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("Libro no encontrado", color = Color.Gray)
         }

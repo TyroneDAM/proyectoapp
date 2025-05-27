@@ -19,7 +19,6 @@ import androidx.navigation.NavHostController
 import com.example.bookcloudapp.R
 import com.example.bookcloudapp.network.ApiService
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
@@ -32,7 +31,7 @@ fun PerfilScreen(navController: NavHostController) {
     var favoritos by remember { mutableStateOf(0) }
     var reservasActivas by remember { mutableStateOf(0) }
 
-    // Lista de consejos fijos
+    // Lista de consejos
     val consejos = listOf(
         "Lee al menos 10 páginas cada día.",
         "Lleva siempre un libro contigo.",
@@ -164,6 +163,12 @@ fun PerfilScreen(navController: NavHostController) {
         }
     }
 
+    val imagenZorro = when {
+        favoritos == 0 && reservasActivas == 0 -> R.drawable.zorro_triste
+        favoritos > 0 && reservasActivas > 0 -> R.drawable.zorro_lector
+        else -> R.drawable.zorro_leyendo
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.fondo_bosque),
@@ -187,8 +192,8 @@ fun PerfilScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Image(
-                painter = painterResource(id = R.drawable.zorro_diploma),
-                contentDescription = "Zorro con diploma",
+                painter = painterResource(id = imagenZorro),
+                contentDescription = "Estado del zorro",
                 modifier = Modifier
                     .size(200.dp)
                     .clip(RoundedCornerShape(16.dp))

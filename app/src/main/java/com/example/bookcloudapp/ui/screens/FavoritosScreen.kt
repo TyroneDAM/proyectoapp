@@ -2,7 +2,6 @@ package com.example.bookcloudapp.ui.screens
 
 import android.content.Context
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -65,7 +64,7 @@ fun FavoritosScreen(navController: NavHostController) {
         )
 
         Column(modifier = Modifier.fillMaxSize()) {
-            Spacer(modifier = Modifier.height(40.dp)) // separación desde la cámara del emulador
+            Spacer(modifier = Modifier.height(40.dp))
 
             Row(
                 modifier = Modifier

@@ -84,6 +84,12 @@ fun RegisterScreen(onRegisterSuccess: () -> Unit) {
                             Handler(Looper.getMainLooper()).post {
                                 Toast.makeText(context, mensaje ?: "Error", Toast.LENGTH_SHORT).show()
                                 if (success) {
+                                    // ✅ Guardar nombre localmente para el perfil
+                                    context.getSharedPreferences("bookcloud_prefs", 0)
+                                        .edit()
+                                        .putString("usuario", nombre)
+                                        .apply()
+
                                     onRegisterSuccess()
                                 }
                             }

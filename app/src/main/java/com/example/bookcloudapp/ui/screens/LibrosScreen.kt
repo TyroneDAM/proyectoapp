@@ -3,12 +3,15 @@ package com.example.bookcloudapp.ui.screens
 import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
@@ -51,7 +54,6 @@ fun LibrosScreen(navController: NavHostController) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Estado para filtro de género
     var selectedGenero by remember { mutableStateOf("Todos") }
     val generos = listOf("Todos", "Economía", "Ficción", "Historia", "Infantil y Juvenil", "Novela Gráfica", "Poesía")
     var expanded by remember { mutableStateOf(false) }
@@ -59,30 +61,14 @@ fun LibrosScreen(navController: NavHostController) {
     val librosFiltrados = libros.filter {
         val coincideTitulo = it["titulo"]?.contains(searchQuery, ignoreCase = true) == true
         val generoLibro = it["genero"]
-            ?.let { g ->
-                Normalizer.normalize(g, Normalizer.Form.NFD)
-                    .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
-                    .replace("\\s+".toRegex(), " ") // quita espacios extra
-                    .lowercase()
-                    .trim()
-            } ?: ""
-
-        val generoFiltro = Normalizer.normalize(selectedGenero, Normalizer.Form.NFD)
-            .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
-            .replace("\\s+".toRegex(), " ")
-            .lowercase()
-            .trim()
-
+            ?.let { g -> Normalizer.normalize(g, Normalizer.Form.NFD).replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "").replace("\\s+".toRegex(), " ").lowercase().trim() } ?: ""
+        val generoFiltro = Normalizer.normalize(selectedGenero, Normalizer.Form.NFD).replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "").replace("\\s+".toRegex(), " ").lowercase().trim()
         val coincideGenero = selectedGenero == "Todos" || generoLibro == generoFiltro
-
         coincideTitulo && coincideGenero
     }
 
-
     LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            ApiService.obtenerLibros { lista -> libros = lista }
-        }
+        withContext(Dispatchers.IO) { ApiService.obtenerLibros { lista -> libros = lista } }
     }
 
     LaunchedEffect(Unit) {
@@ -112,15 +98,6 @@ fun LibrosScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxSize().alpha(0.8f)
             )
 
-            Image(
-                painter = painterResource(id = R.drawable.zorro_leyendo),
-                contentDescription = "Zorro leyendo",
-                modifier = Modifier
-                    .size(100.dp)
-                    .align(Alignment.TopEnd)
-                    .padding(top = 4.dp, end = 4.dp)
-            )
-
             Column(modifier = Modifier.fillMaxSize()) {
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -131,35 +108,52 @@ fun LibrosScreen(navController: NavHostController) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column {
-                        Text("Mi Biblioteca", style = MaterialTheme.typography.headlineSmall)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row {
-                            Button(
-                                onClick = { navController.navigate("favoritos") },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784))
-                            ) { Text("Favoritos") }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = { navController.navigate("reservas") },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB74D))
-                            ) { Text("Reservas") }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = {
-                                    context.getSharedPreferences("bookcloud_prefs", Context.MODE_PRIVATE)
-                                        .edit().remove("token").apply()
-                                    navController.navigate("login") {
-                                        popUpTo("libros") { inclusive = true }
-                                    }
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                            ) { Text("Cerrar sesión") }
+                    Text("Mi Biblioteca", style = MaterialTheme.typography.headlineSmall)
+                    IconButton(onClick = { navController.navigate("perfil") }) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(Color.Black),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.AccountCircle,
+                                contentDescription = "Perfil",
+                                tint = Color.White
+                            )
                         }
                     }
                 }
 
-                // Buscador y filtro por género
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { navController.navigate("favoritos") },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784))
+                    ) { Text("Favoritos") }
+
+                    Button(
+                        onClick = { navController.navigate("reservas") },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB74D))
+                    ) { Text("Reservas") }
+
+                    Button(
+                        onClick = {
+                            context.getSharedPreferences("bookcloud_prefs", Context.MODE_PRIVATE)
+                                .edit().remove("token").apply()
+                            navController.navigate("login") {
+                                popUpTo("libros") { inclusive = true }
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) { Text("Cerrar sesión") }
+                }
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -172,17 +166,19 @@ fun LibrosScreen(navController: NavHostController) {
                         placeholder = { Text("Buscar por título...") },
                         modifier = Modifier.weight(1f)
                     )
-
                     Box {
                         OutlinedButton(onClick = { expanded = true }) {
                             Text(selectedGenero)
                         }
                         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                             generos.forEach { genero ->
-                                DropdownMenuItem(text = { Text(genero) }, onClick = {
-                                    selectedGenero = genero
-                                    expanded = false
-                                })
+                                DropdownMenuItem(
+                                    text = { Text(genero) },
+                                    onClick = {
+                                        selectedGenero = genero
+                                        expanded = false
+                                    }
+                                )
                             }
                         }
                     }

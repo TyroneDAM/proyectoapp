@@ -244,4 +244,65 @@ object ApiService {
         })
     }
 
+    fun obtenerConsejoLectura(callback: (String) -> Unit) {
+        val tokenLocal = token
+        if (tokenLocal.isNullOrEmpty()) {
+            callback("Token no disponible")
+            return
+        }
+
+        val request = Request.Builder()
+            .url(BASE_URL + "data/consejos.php")
+            .get()
+            .addHeader("Authorization", "Bearer $tokenLocal")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                callback("No se pudo obtener el consejo: ${e.message}")
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val consejo = if (response.isSuccessful) {
+                    response.body?.string()?.let {
+                        JSONObject(it).optString("consejo", "Lee todos los días un poco.")
+                    } ?: "Lee todos los días un poco."
+                } else {
+                    "No se pudo obtener el consejo"
+                }
+                callback(consejo)
+            }
+        })
+    }
+    fun obtenerPerfilUsuario(callback: (String) -> Unit) {
+        val tokenLocal = token
+        if (tokenLocal.isNullOrEmpty()) {
+            callback("Desconocido")
+            return
+        }
+
+        val request = Request.Builder()
+            .url(BASE_URL + "data/perfil.php")
+            .get()
+            .addHeader("Authorization", "Bearer $tokenLocal")
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                callback("Error al obtener perfil")
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val nombre = if (response.isSuccessful) {
+                    response.body?.string()?.let {
+                        JSONObject(it).optString("nombre", "Usuario")
+                    } ?: "Usuario"
+                } else {
+                    "Usuario"
+                }
+                callback(nombre)
+            }
+        })
+    }
+
 }

@@ -45,8 +45,10 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
         composable("reservas") {
             ReservasScreen(navController)
         }
+        composable("perfil") {
+            PerfilScreen(navController)
+        }
 
-        // 🆕 Nueva pantalla detalle con argumento ISBN
         composable(
             "detalleLibro?isbn={isbn}",
             arguments = listOf(navArgument("isbn") { type = NavType.StringType })

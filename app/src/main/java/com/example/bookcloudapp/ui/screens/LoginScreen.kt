@@ -1,5 +1,6 @@
 package com.example.bookcloudapp.ui.screens
 
+import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
@@ -25,7 +26,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.bookcloudapp.R
 import com.example.bookcloudapp.network.ApiService
-
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
@@ -37,8 +37,10 @@ fun LoginScreen(
     var isLoading by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
 
+    var showNameDialog by remember { mutableStateOf(false) }
+    var nombreUsuario by remember { mutableStateOf("") }
+
     Box(modifier = Modifier.fillMaxSize()) {
-        // Fondo translúcido
         Image(
             painter = painterResource(id = R.drawable.fondo_inicio),
             contentDescription = null,
@@ -60,104 +62,131 @@ fun LoginScreen(
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(16.dp)
                 )
-            },
-            content = { padding ->
-                Box(
+            }
+        ) { padding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(padding)
+                        .padding(horizontal = 16.dp)
                 ) {
-                    Column(
-                        verticalArrangement = Arrangement.Top,
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                    Spacer(modifier = Modifier.height(200.dp))
+
+                    Image(
+                        painter = painterResource(id = R.drawable.fox_icon),
+                        contentDescription = "Zorro",
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp)
+                            .size(100.dp)
+                            .padding(bottom = 2.dp)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(8.dp, RoundedCornerShape(16.dp))
+                            .background(Color.White.copy(alpha = 0.85f), RoundedCornerShape(16.dp))
+                            .padding(24.dp)
                     ) {
-                        Spacer(modifier = Modifier.height(200.dp))
-
-                        Image(
-                            painter = painterResource(id = R.drawable.fox_icon),
-                            contentDescription = "Zorro",
-                            modifier = Modifier
-                                .size(100.dp)
-                                .padding(bottom = 2.dp)
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .shadow(8.dp, RoundedCornerShape(16.dp))
-                                .background(
-                                    color = Color.White.copy(alpha = 0.85f),
-                                    shape = RoundedCornerShape(16.dp)
-                                )
-                                .padding(24.dp)
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column(
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
+                            OutlinedTextField(
+                                value = email,
+                                onValueChange = { email = it },
+                                label = { Text("Correo electrónico") },
                                 modifier = Modifier.fillMaxWidth()
-                            ) {
-                                OutlinedTextField(
-                                    value = email,
-                                    onValueChange = { email = it },
-                                    label = { Text("Correo electrónico") },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                            )
 
-                                OutlinedTextField(
-                                    value = contrasena,
-                                    onValueChange = { contrasena = it },
-                                    label = { Text("Contraseña") },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                                    trailingIcon = {
-                                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                            Icon(
-                                                imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                                contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
-                                            )
-                                        }
+                            OutlinedTextField(
+                                value = contrasena,
+                                onValueChange = { contrasena = it },
+                                label = { Text("Contraseña") },
+                                modifier = Modifier.fillMaxWidth(),
+                                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                trailingIcon = {
+                                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                        Icon(
+                                            imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                            contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+                                        )
                                     }
-                                )
+                                }
+                            )
 
-                                Button(
-                                    onClick = {
-                                        if (email.isNotBlank() && contrasena.isNotBlank()) {
-                                            isLoading = true
-                                            ApiService.login(email, contrasena) { success, mensaje ->
-                                                isLoading = false
-                                                Handler(Looper.getMainLooper()).post {
-                                                    if (success) {
-                                                        context.getSharedPreferences("bookcloud_prefs", 0)
-                                                            .edit()
-                                                            .putString("token", ApiService.token)
-                                                            .apply()
-                                                        onLoginSuccess()
+                            Button(
+                                onClick = {
+                                    if (email.isNotBlank() && contrasena.isNotBlank()) {
+                                        isLoading = true
+                                        ApiService.login(email, contrasena) { success, mensaje ->
+                                            isLoading = false
+                                            Handler(Looper.getMainLooper()).post {
+                                                if (success) {
+                                                    val prefs = context.getSharedPreferences("bookcloud_prefs", Context.MODE_PRIVATE)
+                                                    prefs.edit().putString("token", ApiService.token).apply()
+
+                                                    val nombreGuardado = prefs.getString("usuario", null)
+                                                    if (nombreGuardado.isNullOrBlank()) {
+                                                        showNameDialog = true
                                                     } else {
-                                                        Toast.makeText(context, mensaje ?: "Error", Toast.LENGTH_SHORT).show()
+                                                        onLoginSuccess()
                                                     }
+                                                } else {
+                                                    Toast.makeText(context, mensaje ?: "Error", Toast.LENGTH_SHORT).show()
                                                 }
                                             }
-                                        } else {
-                                            Toast.makeText(context, "Completa todos los campos", Toast.LENGTH_SHORT).show()
                                         }
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    enabled = !isLoading
-                                ) {
-                                    Text(text = if (isLoading) "Cargando..." else "Iniciar sesión")
-                                }
+                                    } else {
+                                        Toast.makeText(context, "Completa todos los campos", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !isLoading
+                            ) {
+                                Text(text = if (isLoading) "Cargando..." else "Iniciar sesión")
+                            }
 
-                                TextButton(onClick = onGoToRegister) {
-                                    Text("¿No tienes cuenta? Regístrate aquí")
-                                }
+                            TextButton(onClick = onGoToRegister) {
+                                Text("¿No tienes cuenta? Regístrate aquí")
                             }
                         }
                     }
                 }
             }
-        )
+        }
+
+        if (showNameDialog) {
+            AlertDialog(
+                onDismissRequest = {},
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            val prefs = context.getSharedPreferences("bookcloud_prefs", Context.MODE_PRIVATE)
+                            prefs.edit().putString("usuario", nombreUsuario.trim()).apply()
+                            showNameDialog = false
+                            onLoginSuccess()
+                        },
+                        enabled = nombreUsuario.isNotBlank()
+                    ) {
+                        Text("Guardar")
+                    }
+                },
+                title = { Text("¿Cómo quieres que te llamemos?") },
+                text = {
+                    OutlinedTextField(
+                        value = nombreUsuario,
+                        onValueChange = { nombreUsuario = it },
+                        label = { Text("Tu nombre") }
+                    )
+                }
+            )
+        }
     }
 }

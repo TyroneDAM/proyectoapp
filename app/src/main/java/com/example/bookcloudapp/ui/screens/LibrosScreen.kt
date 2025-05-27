@@ -34,6 +34,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import java.text.Normalizer
 
 @Composable
 fun LibrosScreen(navController: NavHostController) {
@@ -50,9 +51,33 @@ fun LibrosScreen(navController: NavHostController) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // Estado para filtro de género
+    var selectedGenero by remember { mutableStateOf("Todos") }
+    val generos = listOf("Todos", "Economía", "Ficción", "Historia", "Infantil y Juvenil", "Novela Gráfica", "Poesía")
+    var expanded by remember { mutableStateOf(false) }
+
     val librosFiltrados = libros.filter {
-        it["titulo"]?.contains(searchQuery, ignoreCase = true) == true
+        val coincideTitulo = it["titulo"]?.contains(searchQuery, ignoreCase = true) == true
+        val generoLibro = it["genero"]
+            ?.let { g ->
+                Normalizer.normalize(g, Normalizer.Form.NFD)
+                    .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+                    .replace("\\s+".toRegex(), " ") // quita espacios extra
+                    .lowercase()
+                    .trim()
+            } ?: ""
+
+        val generoFiltro = Normalizer.normalize(selectedGenero, Normalizer.Form.NFD)
+            .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+            .replace("\\s+".toRegex(), " ")
+            .lowercase()
+            .trim()
+
+        val coincideGenero = selectedGenero == "Todos" || generoLibro == generoFiltro
+
+        coincideTitulo && coincideGenero
     }
+
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -80,7 +105,6 @@ fun LibrosScreen(navController: NavHostController) {
 
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-
             Image(
                 painter = painterResource(id = R.drawable.fondo_bosque),
                 contentDescription = null,
@@ -114,16 +138,12 @@ fun LibrosScreen(navController: NavHostController) {
                             Button(
                                 onClick = { navController.navigate("favoritos") },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784))
-                            ) {
-                                Text("Favoritos")
-                            }
+                            ) { Text("Favoritos") }
                             Spacer(modifier = Modifier.width(8.dp))
                             Button(
                                 onClick = { navController.navigate("reservas") },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB74D))
-                            ) {
-                                Text("Reservas")
-                            }
+                            ) { Text("Reservas") }
                             Spacer(modifier = Modifier.width(8.dp))
                             Button(
                                 onClick = {
@@ -134,21 +154,39 @@ fun LibrosScreen(navController: NavHostController) {
                                     }
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                            ) {
-                                Text("Cerrar sesión")
-                            }
+                            ) { Text("Cerrar sesión") }
                         }
                     }
                 }
 
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text("Buscar por título...") },
+                // Buscador y filtro por género
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                )
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Buscar por título...") },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Box {
+                        OutlinedButton(onClick = { expanded = true }) {
+                            Text(selectedGenero)
+                        }
+                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                            generos.forEach { genero ->
+                                DropdownMenuItem(text = { Text(genero) }, onClick = {
+                                    selectedGenero = genero
+                                    expanded = false
+                                })
+                            }
+                        }
+                    }
+                }
 
                 LazyColumn(
                     modifier = Modifier
@@ -171,15 +209,6 @@ fun LibrosScreen(navController: NavHostController) {
                             }.build()
 
                         val painter = rememberAsyncImagePainter(model = libro["portada"], imageLoader = imageLoader)
-
-                        val rutaDetalle = "detalleLibro/" +
-                                URLEncoder.encode(libro["titulo"] ?: "", StandardCharsets.UTF_8.toString()) + "/" +
-                                URLEncoder.encode(libro["autor"] ?: "", StandardCharsets.UTF_8.toString()) + "/" +
-                                URLEncoder.encode(libro["genero"] ?: "", StandardCharsets.UTF_8.toString()) + "/" +
-                                URLEncoder.encode(libro["editorial"] ?: "", StandardCharsets.UTF_8.toString()) + "/" +
-                                URLEncoder.encode(libro["fecha"] ?: "", StandardCharsets.UTF_8.toString()) + "/" +
-                                URLEncoder.encode(libro["descripcion"] ?: "", StandardCharsets.UTF_8.toString()) + "/" +
-                                URLEncoder.encode(libro["portada"] ?: "", StandardCharsets.UTF_8.toString())
 
                         Card(
                             modifier = Modifier

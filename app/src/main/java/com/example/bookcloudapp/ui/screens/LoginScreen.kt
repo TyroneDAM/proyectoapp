@@ -9,6 +9,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -17,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.bookcloudapp.R
 import com.example.bookcloudapp.network.ApiService
@@ -30,6 +35,7 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    var passwordVisible by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Fondo translúcido
@@ -77,6 +83,7 @@ fun LoginScreen(
                                 .size(100.dp)
                                 .padding(bottom = 2.dp)
                         )
+
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -103,7 +110,16 @@ fun LoginScreen(
                                     value = contrasena,
                                     onValueChange = { contrasena = it },
                                     label = { Text("Contraseña") },
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                    trailingIcon = {
+                                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                            Icon(
+                                                imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                                contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+                                            )
+                                        }
+                                    }
                                 )
 
                                 Button(

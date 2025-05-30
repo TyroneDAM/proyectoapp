@@ -25,11 +25,13 @@ import kotlinx.coroutines.withContext
 fun PerfilScreen(navController: NavHostController) {
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("favoritos", Context.MODE_PRIVATE)
+    val nombrePrefs = context.getSharedPreferences("bookcloud_prefs", Context.MODE_PRIVATE)
     val nombreUsuario = context.getSharedPreferences("bookcloud_prefs", Context.MODE_PRIVATE)
         .getString("usuario", "Usuario")
 
     var favoritos by remember { mutableStateOf(0) }
     var reservasActivas by remember { mutableStateOf(0) }
+    var mostrarConfirmacionLogout by remember { mutableStateOf(false) }
 
     // Lista de consejos
     val consejos = listOf(
@@ -134,7 +136,8 @@ fun PerfilScreen(navController: NavHostController) {
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             ApiService.obtenerLibros { listaLibros ->
-                val idsValidos = listaLibros.mapNotNull { it["id"]?.takeIf { it.isNotBlank() } ?: it["titulo"] }
+                val idsValidos =
+                    listaLibros.mapNotNull { it["id"]?.takeIf { it.isNotBlank() } ?: it["titulo"] }
 
                 val editor = prefs.edit()
                 var totalFavoritos = 0
@@ -202,7 +205,10 @@ fun PerfilScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Text("📚 Libros favoritos: $favoritos", style = MaterialTheme.typography.bodyLarge)
-            Text("📖 Libros reservados: $reservasActivas", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                "📖 Libros reservados: $reservasActivas",
+                style = MaterialTheme.typography.bodyLarge
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -220,11 +226,54 @@ fun PerfilScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Button(onClick = {
-                navController.popBackStack("libros", inclusive = false)
-            }) {
+            Button(
+                onClick = {
+                    navController.popBackStack("libros", inclusive = false)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+            ) {
                 Text("Volver a tus libros")
+            }
+
+            Button(
+                onClick = { mostrarConfirmacionLogout = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 15.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Cerrar sesión")
+            }
+            if (mostrarConfirmacionLogout) {
+                AlertDialog(
+                    onDismissRequest = { mostrarConfirmacionLogout = false },
+                    title = { Text("¿Cerrar sesión?") },
+                    text = { Text("¿Estás seguro de que deseas cerrar sesión?") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            mostrarConfirmacionLogout = false
+                            nombrePrefs.edit().clear().apply()
+                            navController.navigate("login") {
+                                popUpTo("perfil") { inclusive = true }
+                            }
+                        }) {
+                            Text("Sí, cerrar sesión", color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { mostrarConfirmacionLogout = false }) {
+                            Text("Cancelar")
+                        }
+                    }
+                )
             }
         }
     }
 }
+

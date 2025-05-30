@@ -45,6 +45,7 @@ fun AppNavigation(navController: NavHostController, startDestination: String) {
         composable("reservas") {
             ReservasScreen(navController)
         }
+
         composable("perfil") {
             PerfilScreen(navController)
         }

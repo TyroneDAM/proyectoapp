@@ -134,49 +134,42 @@ fun LibrosScreen(navController: NavHostController) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
                         onClick = { navController.navigate("favoritos") },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784))
-                    ) { Text("Favoritos") }
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Favoritos")
+                    }
 
                     Button(
                         onClick = { navController.navigate("reservas") },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB74D))
-                    ) { Text("Reservas") }
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB74D)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Reservas")
+                    }
 
                     Button(
                         onClick = {
-                            context.getSharedPreferences("bookcloud_prefs", Context.MODE_PRIVATE)
-                                .edit().remove("token").apply()
-                            navController.navigate("login") {
-                                popUpTo("libros") { inclusive = true }
+                            if (librosFiltrados.isNotEmpty()) {
+                                cargandoSorpresa = true
+                                scope.launch {
+                                    delay(1000)
+                                    libroSorpresa = librosFiltrados.random()
+                                    cargandoSorpresa = false
+                                    mostrarDialogo = true
+                                }
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                    ) { Text("Cerrar sesión") }
-                }
-
-                Button(
-                    onClick = {
-                        if (librosFiltrados.isNotEmpty()) {
-                            cargandoSorpresa = true
-                            scope.launch {
-                                delay(1000)
-                                libroSorpresa = librosFiltrados.random()
-                                cargandoSorpresa = false
-                                mostrarDialogo = true
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6))
-                ) {
-                    Text("🎲 Sorpréndeme con un nuevo libro")
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("🎲Sorpresa")
+                    }
                 }
 
                 Row(

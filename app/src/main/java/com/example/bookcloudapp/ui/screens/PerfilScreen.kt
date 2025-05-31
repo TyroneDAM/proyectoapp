@@ -166,11 +166,28 @@ fun PerfilScreen(navController: NavHostController) {
         }
     }
 
-    val imagenZorro = when {
-        favoritos == 0 && reservasActivas == 0 -> R.drawable.zorro_triste
-        favoritos > 0 && reservasActivas > 0 -> R.drawable.zorro_lector
-        else -> R.drawable.zorro_leyendo
+    val imagenZorro = remember(favoritos, reservasActivas) {
+        val probabilidadEasterEgg = 0.1
+        val usarEasterEgg = Math.random() < probabilidadEasterEgg
+
+        val imagenesEasterEgg = listOf(
+            R.drawable.zorro_lol,
+            R.drawable.zorro_creepy,
+            R.drawable.zorro_jesus,
+            R.drawable.zorro_duolingo,
+        )
+
+        if (usarEasterEgg) {
+            imagenesEasterEgg.random()
+        } else {
+            when {
+                favoritos == 0 && reservasActivas == 0 -> R.drawable.zorro_triste
+                favoritos > 0 && reservasActivas > 0 -> R.drawable.zorro_lector
+                else -> R.drawable.zorro_leyendo
+            }
+        }
     }
+
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(

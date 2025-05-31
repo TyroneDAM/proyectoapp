@@ -53,18 +53,15 @@ object ApiService {
     }
 
     fun register(nombre: String, email: String, contrasena: String, callback: (Boolean, String?) -> Unit) {
-        val json = JSONObject()
-        json.put("usuario", nombre)
-        json.put("email", email)
-        json.put("password", contrasena)
-
-        val body = json.toString().toRequestBody("application/json".toMediaType())
+        val formBody = FormBody.Builder()
+            .add("nombre", nombre)
+            .add("email", email)
+            .add("contraseña", contrasena)
+            .build()
 
         val request = Request.Builder()
-            .url(BASE_URL + "auth/register.php")
-            .post(body)
-            .addHeader("Accept", "application/json")
-            .addHeader("Content-Type", "application/json")
+            .url("https://bookcloud.es/php/procesar_registro.php")
+            .post(formBody)
             .build()
 
         client.newCall(request).enqueue(object : Callback {
@@ -73,12 +70,8 @@ object ApiService {
             }
 
             override fun onResponse(call: Call, response: Response) {
-                val bodyStr = response.body?.string()
-                if (response.isSuccessful && bodyStr != null) {
-                    val json = JSONObject(bodyStr)
-                    val success = json.optBoolean("success", false)
-                    val mensaje = json.optString("mensaje", "Registro finalizado")
-                    callback(success, mensaje)
+                if (response.isSuccessful) {
+                    callback(true, "Registro exitoso. Revisa tu correo.")
                 } else {
                     callback(false, "Error al registrarse")
                 }
@@ -243,5 +236,4 @@ object ApiService {
             }
         })
     }
-
 }

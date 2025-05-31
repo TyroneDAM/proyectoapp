@@ -26,6 +26,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.bookcloudapp.R
 import com.example.bookcloudapp.network.ApiService
+import androidx.compose.ui.graphics.graphicsLayer
+
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
@@ -39,6 +41,17 @@ fun LoginScreen(
 
     var showNameDialog by remember { mutableStateOf(false) }
     var nombreUsuario by remember { mutableStateOf("") }
+
+    // 🦊 Frases y globo del zorro
+    var showFraseGlobo by remember { mutableStateOf(false) }
+    var fraseActual by remember { mutableStateOf("") }
+    val frasesZorro = listOf(
+        "¡A leer se ha dicho!",
+        "Un libro al día mantiene la ignorancia a raya.",
+        "El saber no ocupa lugar, ¡pero sí muchas páginas!",
+        "¡No hay nada como leer bajo una manta!",
+        "Los zorros sabios leen cada noche 🦊📚"
+    )
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -78,13 +91,52 @@ fun LoginScreen(
                 ) {
                     Spacer(modifier = Modifier.height(200.dp))
 
-                    Image(
-                        painter = painterResource(id = R.drawable.fox_icon),
-                        contentDescription = "Zorro",
-                        modifier = Modifier
-                            .size(100.dp)
-                            .padding(bottom = 2.dp)
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        if (showFraseGlobo) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.offset(y = (-80).dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            color = Color(0xFFFFF3E0),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                        .padding(12.dp)
+                                ) {
+                                    Text(
+                                        text = "\"$fraseActual\"",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .size(16.dp, 10.dp)
+                                        .graphicsLayer {
+                                            rotationZ = 45f
+                                        }
+                                        .background(Color(0xFFFFF3E0))
+                                )
+                            }
+                        }
+
+                        Image(
+                            painter = painterResource(id = R.drawable.fox_icon),
+                            contentDescription = "Zorro",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .padding(bottom = 2.dp)
+                                .clickable {
+                                    fraseActual = frasesZorro.random()
+                                    showFraseGlobo = true
+                                    Handler(Looper.getMainLooper()).postDelayed({
+                                        showFraseGlobo = false
+                                    }, 5000)
+                                }
+                        )
+                    }
 
                     Box(
                         modifier = Modifier
@@ -162,6 +214,7 @@ fun LoginScreen(
             }
         }
 
+        // 👤 Diálogo para guardar nombre del usuario
         if (showNameDialog) {
             AlertDialog(
                 onDismissRequest = {},
@@ -190,3 +243,4 @@ fun LoginScreen(
         }
     }
 }
+

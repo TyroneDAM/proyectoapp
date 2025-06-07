@@ -2,6 +2,7 @@ package com.example.bookcloudapp.ui.screens
 
 import android.content.Context
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -14,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.bookcloudapp.R
@@ -205,9 +207,16 @@ fun PerfilScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Perfil de $nombreUsuario",
-                style = MaterialTheme.typography.headlineMedium
+                "Perfil de $nombreUsuario",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.ExtraBold
+                ),
+                color = Color(0xFFBF5F17),
+                modifier = Modifier
+                    .background(Color(0xFFFFE0B2), shape = RoundedCornerShape(8.dp))
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
             )
+
 
             Spacer(modifier = Modifier.height(24.dp))
 

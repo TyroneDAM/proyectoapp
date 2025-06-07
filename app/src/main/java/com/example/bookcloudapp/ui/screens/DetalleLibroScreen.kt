@@ -23,6 +23,8 @@ import com.example.bookcloudapp.R
 import com.example.bookcloudapp.network.ApiService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 
 @Composable
 fun DetalleLibroScreen(isbn: String?) {
@@ -54,6 +56,7 @@ fun DetalleLibroScreen(isbn: String?) {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
                 val imageLoader = ImageLoader.Builder(LocalContext.current).build()
 

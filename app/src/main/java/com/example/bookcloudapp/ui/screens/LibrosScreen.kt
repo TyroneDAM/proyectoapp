@@ -39,6 +39,10 @@ import okhttp3.OkHttpClient
 import java.text.Normalizer
 import androidx.compose.animation.core.*
 import kotlinx.coroutines.delay
+import com.example.bookcloudapp.ui.components.BottomBar
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun LibrosScreen(navController: NavHostController) {
@@ -62,6 +66,13 @@ fun LibrosScreen(navController: NavHostController) {
     var cargandoSorpresa by remember { mutableStateOf(false) }
     var libroSorpresa by remember { mutableStateOf<Map<String, String>?>(null) }
     var mostrarDialogo by remember { mutableStateOf(false) }
+
+    var rebotar by remember { mutableStateOf(false) }
+    val escalaAnimada by animateFloatAsState(
+        targetValue = if (rebotar) 1.15f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        finishedListener = { rebotar = false }
+    )
 
     val librosFiltrados = libros.filter {
         val coincideTitulo = it["titulo"]?.contains(searchQuery, ignoreCase = true) == true
@@ -94,7 +105,10 @@ fun LibrosScreen(navController: NavHostController) {
         }
     }
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = { BottomBar(navController) }
+    ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             Image(
                 painter = painterResource(id = R.drawable.fondo_bosque),
@@ -113,7 +127,14 @@ fun LibrosScreen(navController: NavHostController) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Mi Biblioteca", style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        "Mi Biblioteca",
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold),
+                        color = Color(0xFF6D4C41),
+                        modifier = Modifier
+                            .background(Color(0xFFFFF3E0), shape = RoundedCornerShape(8.dp))
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    )
                     IconButton(onClick = { navController.navigate("perfil") }) {
                         Box(
                             modifier = Modifier
@@ -134,24 +155,12 @@ fun LibrosScreen(navController: NavHostController) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .graphicsLayer {
+                            scaleX = escalaAnimada
+                            scaleY = escalaAnimada
+                        }
                 ) {
-                    Button(
-                        onClick = { navController.navigate("favoritos") },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784)),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Favoritos")
-                    }
-
-                    Button(
-                        onClick = { navController.navigate("reservas") },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB74D)),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Reservas")
-                    }
 
                     Button(
                         onClick = {
@@ -160,15 +169,25 @@ fun LibrosScreen(navController: NavHostController) {
                                 scope.launch {
                                     delay(1000)
                                     libroSorpresa = librosFiltrados.random()
+                                    rebotar = true
                                     cargandoSorpresa = false
                                     mostrarDialogo = true
                                 }
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)),
-                        modifier = Modifier.weight(1f)
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFB74D)), // naranja suave
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text("🎲Sorpresa")
+                        Icon(
+                            painter = painterResource(id = R.drawable.zorro_dado),
+                            contentDescription = "Zorro sorpresa",
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Libro Sorpresa")
                     }
                 }
 
@@ -185,10 +204,19 @@ fun LibrosScreen(navController: NavHostController) {
                         modifier = Modifier.weight(1f)
                     )
                     Box {
-                        OutlinedButton(onClick = { expanded = true }) {
+                        OutlinedButton(
+                            onClick = { expanded = true },
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color(0xFF5D4037)
+                            )
+                        ) {
                             Text(selectedGenero)
                         }
-                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
                             generos.forEach { genero ->
                                 DropdownMenuItem(
                                     text = { Text(genero) },

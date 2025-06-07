@@ -2,6 +2,7 @@ package com.example.bookcloudapp.ui.screens
 
 import android.content.Context
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,6 +27,7 @@ import com.example.bookcloudapp.network.ApiService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.navigation.NavHostController
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun FavoritosScreen(navController: NavHostController) {
@@ -75,9 +78,16 @@ fun FavoritosScreen(navController: NavHostController) {
             ) {
 
                 Text(
-                    text = "Mis Favoritos",
-                    style = MaterialTheme.typography.headlineSmall
+                    "Mis favoritos",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.ExtraBold
+                    ),
+                    color = Color(0xFFBF5F17),
+                    modifier = Modifier
+                        .background(Color(0xFFFFE0B2), shape = RoundedCornerShape(8.dp))
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
                 )
+
 
                 Button(
                     onClick = {
@@ -119,11 +129,13 @@ fun FavoritosScreen(navController: NavHostController) {
                         )
                         Spacer(modifier = Modifier.height(24.dp))
                         Text(
-                            text = "¿No te gustó ningún libro?",
-                            fontSize = 18.sp,
-                            color = Color(0xFF2E7D32),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                            "¿Cómo que no hemos encontrado ningún libro que nos guste? 🦊",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF6D4C41),
+                                textAlign = TextAlign.Center
+                            ),
+                            modifier = Modifier.padding(25.dp)
                         )
                     }
 

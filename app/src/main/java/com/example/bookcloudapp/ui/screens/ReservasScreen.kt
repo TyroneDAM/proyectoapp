@@ -1,6 +1,7 @@
 package com.example.bookcloudapp.ui.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
@@ -22,6 +24,7 @@ import com.example.bookcloudapp.model.Reserva
 import com.example.bookcloudapp.network.ApiService
 import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun ReservasScreen(navController: NavHostController) {
@@ -59,10 +62,16 @@ fun ReservasScreen(navController: NavHostController) {
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Tus Libros Reservados",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    "Tus libros reservados",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.ExtraBold
+                    ),
+                    color = Color(0xFFBF5F17),
+                    modifier = Modifier
+                        .background(Color(0xFFFFE0B2), shape = RoundedCornerShape(8.dp))
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
                 )
+
 
                 if (reservasActivas.isEmpty()) {
                     Box(
@@ -81,10 +90,13 @@ fun ReservasScreen(navController: NavHostController) {
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "¿Es que no vamos a coger ningún libro?",
-                                fontSize = 18.sp,
-                                color = Color(0xFF2E7D32),
-                                style = MaterialTheme.typography.titleMedium
+                                "¿No vamos a reservar ningún libro? 🦊",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFF6D4C41),
+                                    textAlign = TextAlign.Center
+                                ),
+                                modifier = Modifier.padding(25.dp)
                             )
                         }
                     }
